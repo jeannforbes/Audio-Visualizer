@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Web Audio Visualizer</title>
+	<link href="https://fonts.googleapis.com/css?family=Raleway" rel="stylesheet">
+	<link rel="shortcut icon" type="image/x-icon" href="favicon.ico"/>
+	<style>
+	*,body{
+		margin: 0;
+		padding: 0;
+		color: white;
+	}
+	body {
+		background-image: url('media/subtle_carbon.png');
+		font-family: 'Raleway', sans-serif;
+    }
+    h3{
+    	text-align: center;
+    	font-size: 20px;
+    	text-decoration: none;
+    	margin: 30px 0 10px 0;
+    }
+    #canvas,#buffer{}
+    #buffer{ visibility: hidden;}
+      
+    #controls{
+    	position: absolute;
+    	left: 0;
+    }
+    audio{visibility: hidden;}
+    #pButton{
+    	float: left;
+    	height: 60px;
+    	width: 60px;
+    	border: none;
+    	background-size: 90% 90%;
+    	background-position: center;
+    	background-repeat: no-repeat;
+    }
+    .pause{background:url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAACvElEQVR4nO3YMW7bQBRF0feHFORVpUiR1bhwGu/BtUuvJQi8LZPzfwpSslMEsIURIOTdAxCEWYwEzp0hZQkAAAAAAAAAAAAAAAAA8J+IkYN9f35WtCZFVMTQoW1UlVSlynw/elf1rtfHx5Ckkfd26Cz9eHlRtFaK2L4kEXxN1V8B5Loq11XV+/n8+vgYIwOYh40kabq7q2hNbZp0jgCfdpr87F2VqbYH0N/eJEkp6dvTU2ngwh0awHw8KqZpO1rbLhLB51Rtp0y1fcvv2+P0fD2qFJlDP3bsDnA8qs2zgh3gIuftf9/ydVpEVWrzvEVwujbI0ADa4aB2OChaG/5FXVSmal9AkqT9RbDNs3Jdhy+q8QHsOwCr/zK17wD7H9uk7wsqWnvfFQYZGkC0ppim80sgvi6qlJIi8/w+1aZJff9VddM7QLR2/vnHI+Aylak43b+P5yu9UzFLN+w04df8nwoB3LorP0oJwBwBmCMAcwRgjgDMEYA5AjBHAOYIwBwBmCMAcwRgjgDMEYA5AjBHAOYIwBwBmCMAcwRgjgDMEYA5AjBHAOYIwBwBmCMAcwRgjgDMEYA5AjBHAOYIwBwBmCMAcwRgjgDMEYA5AjBHAOYIwBwBmCMAcwRgjgDMEYA5AjBHAOYIwBwBmCMAcwRgjgDMEYA5AjBHAOYIwBwBmCMAcwRgjgDMEYA5AjBHAOYIwBwBmCMAcwRgjgDMEYA5AjBHAOYIwBwB3Lqqqw5PADes9smvqquFMI8crDJVVYoqVebIoX1UqU737+N5P0YbH0DvSkkRMXJoG1Wl6v18L6t3Ze/bDnCFCIYGkMsSkioyFY2nyyUqU5WpXBblur7HsB+/Hx4ifv4c9nmjA5CqIqapFMEu8EWnZ331rlxX9WVRXxbVuirXVb/u77mhAAAAAAAAAAAAAAAAAIB/+QMA4RgBTZDTBAAAAABJRU5ErkJggg==');}
+    .play{background:url('data:image/png;base64,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');}
+    #timeline{
+		width: 400px;
+		height: 40px;
+		background: rgba(255,255,255,0.3);
+		margin-top: 10px;
+		float: left;
+		border-radius: 2px;
+		display: block;
+	}
+	#status{ 
+		z-index: -1;
+		position: absolute; 
+		margin: -36px 0 0 5px;
+		font-size: 28px;
+		text-shadow: 
+		 3px  3px #000,
+		-1px -1px 0 #000,
+		 1px -1px 0 #000,
+		-1px -1px 0 #000,
+		 1px  1px 0 #000;
+	}
+	#playhead{
+		width: 19px;
+		height: 38px;
+		margin-top: 1px;
+		background: rgba(90,200,200, .8);
+		border-radius: 2px;
+    }
+    #controlsSidebar{
+    	position: absolute;
+    	left: -240px;
+    	top: 0;
+    	width: 220px;
+    	height: 100%;
+    	padding: 10px;
+    	background: rgba(20,20,20,0.8);
+    	-webkit-transition: -webkit-transform 1s;
+    	transition: transform 1s;
+    }
+    #controlsSidebar:hover{
+    	-webkit-transform: translate(240px, 0);
+    	transform: translate(240px, 0);
+    }
+    #controlsSidebar p{
+    	font-size: 12px;
+    	margin-left:10px;
+    	color:grey;
+    }
+    #sidebarTab{
+    	position: absolute;
+    	left: 240px;
+    	width: 40px;
+    	height: 150px;
+    	margin: 0;
+    	padding: 0;
+    	background: rgba(20,20,20,0.8);
+    	border-radius: 0 5px 5px 0;
+    }
+    button, #trackSelectStyle{
+    	background-color:rgb(90,200,200);
+    	border: none;
+    	color: black;
+    	padding: 10px 20px;
+    	text-align: center;
+    	text-decoration: none;
+    	font-size: 14px;
+    }
+    #trackSelectStyle{ 
+    	width: 100px; 
+    	margin: -10px 0 0 60px;
+    }
+    #trackSelectStyle select {
+	    width: 130%;
+	    margin-left: -10px;
+	    border: none;
+	    box-shadow: none;
+	    background-color: transparent;
+	    background-image: none;
+	    -webkit-appearance: none;
+	    -moz-appearance: none;
+	    appearance: none;
+	    font-size: 14px;
+	}
+    label{
+    	display: inline-block;
+    	margin: 5px 0 5px 0;
+    }
+    .noselect {
+		  -webkit-user-select: none;
+		  -moz-user-select: none;
+		  -ms-user-select: none;
+		  user-select: none;
+		}
+	input{ margin: 0 0 0 5px; }
+	</style>
+	<script>
+	// Here's that IIFE!
+	(function(){
+		"use strict";
+		
+		var NUM_SAMPLES = 256;
+		var SOUND_1 = 'media/Starbound.mp3';
+		var SOUND_2 = 'media/Shadows and Dust.mp3';
+		var audioElement;
+		var analyserNode, distortNode, gainNode;
+		var distortAmount = 0, gainAmount = 1;
+		var canvas,ctx,maxRadius;
+		var buffer, bCtx;
+		var ramp = false, tint = false, invert = false, noise = false, rave = false;
+		var rampCutoff = 100, rampValue = 50, lineStrength = 0.5, featherValue = 0;
+		var COUNTER = 0;
+		var music, timeline, timelineWidth, playhead, onplayhead = false, duration,timelineWidth;
+		var mouseX = 0, mouseY = 0;
+		
+		function init(){
+
+			//Setup canvas
+			canvas = document.querySelector('#canvas');
+			ctx = canvas.getContext("2d");
+			buffer = document.querySelector('#buffer');
+			bCtx = buffer.getContext('2d');
+			maxRadius = document.querySelector('#circleSize').value;
+			
+			//Setup audio & UI
+			audioElement = document.querySelector('audio');
+			createWebAudioContextWithNodes(audioElement);
+			setupUI();
+			playStream(audioElement,SOUND_1);
+
+			//Time keeps tickin'
+			window.setInterval(function(){COUNTER+=1;}, 100);
+
+			/* EVENT HANDLERS */
+
+			document.body.addEventListener('mousemove', updateMousePos, false);
+
+			//Audio
+			document.querySelector('#distortBox').onchange = function(e){
+				if(e.target.checked) distortNode.curve = distortAudio(400);
+				else distortNode.curve = distortAudio(0);
+			};
+			document.querySelector('#gain').onchange = function(e){gainNode.gain.value = (e.target.value/100);};
+
+			//Filters
+			document.querySelector('#circleSize').onchange = function(e){maxRadius = e.target.value;};
+			document.querySelector('#tintBox').onchange = function(e){tint = e.target.checked;};
+			document.querySelector('#invertBox').onchange = function(e){invert = e.target.checked;};
+			document.querySelector('#noiseBox').onchange = function(e){noise = e.target.checked;};
+			document.querySelector('#rampBox').onchange = function(e){ramp = e.target.checked;};
+			document.querySelector('#raveBox').onchange = function(e){rave = e.target.checked;};
+
+			//Tweaks
+			document.querySelector('#rampCutoff').onchange = function(e){rampCutoff = e.target.value;};
+			document.querySelector('#rampValue').onchange = function(e){rampValue = e.target.value;};
+			document.querySelector('#lineStrength').onchange = function(e){lineStrength = (e.target.value/100);};
+			document.querySelector('#featherValue').onchange = function(e){featherValue = (e.target.value/100);};
+
+			document.querySelector('#pButton').onclick = playAudio;
+
+			// start animation loop
+			resize();
+			update();
+		}
+		
+		//Sets the audio context and nodes up - only call this once
+		function createWebAudioContextWithNodes(audioElement) {
+			var audioCtx, sourceNode;
+			// create new AudioContext
+			// The || is because WebAudio has not been standardized across browsers yet
+			// http://webaudio.github.io/web-audio-api/#the-audiocontext-interface
+			audioCtx = new (window.AudioContext || window.webkitAudioContext);
+			
+			// create nodes
+			analyserNode = audioCtx.createAnalyser();
+			distortNode = audioCtx.createWaveShaper();
+			gainNode = audioCtx.createGain();
+			gainNode.gain.value = 0.5;
+			
+			// fft stands for Fast Fourier Transform
+			analyserNode.fftSize = NUM_SAMPLES;
+			
+			// this is where we connect <audio> --> nodes --> destination
+			sourceNode = audioCtx.createMediaElementSource(audioElement); 
+			sourceNode.connect(analyserNode);
+			analyserNode.connect(distortNode);
+			distortNode.connect(gainNode);
+			gainNode.connect(audioCtx.destination);
+		}
+		
+		//Sets the UI up - only call this once
+		function setupUI(){
+			music = document.querySelector('#music');
+			playhead = document.querySelector("#playhead");
+			timeline = document.querySelector("#timeline");
+
+			timelineWidth = timeline.offsetWidth - playhead.offsetWidth;
+
+			onplayhead = true;
+
+			music.play();
+			music.pause();
+
+			playhead.addEventListener('mousedown', mouseDown, false);
+			window.addEventListener('mouseup', mouseUp, false);
+			music.addEventListener("timeupdate", timeUpdate, false);
+			music.addEventListener("canplaythrough", function () {duration = music.duration;}, false);
+
+			document.querySelector("#trackSelect").onchange = function(e){
+				playStream(audioElement,e.target.value);
+			};
+
+			//Makes timeline clickable
+			timeline.addEventListener("click", function (event) {
+				moveplayhead(event);
+				music.currentTime = music.duration * clickPercent(event);
+			}, false);
+		}
+		
+		//Play the audio stream
+		function playStream(audioElement,path){
+			audioElement.src = path;
+			audioElement.play();
+			audioElement.volume = 0.2;
+			document.querySelector('#status').innerHTML = path.substring(6,path.length-4);
+		}
+
+		//Distorts the audio using an algorithm originally posted
+		//	by StackOverflow user Kevin Ennis
+		function distortAudio(amount) {
+			var k = typeof amount === 'number' ? amount : 50,
+			curve = new Float32Array(44100),
+			deg = Math.PI / 180,
+			x;
+			for (var i=0; i < 44100; ++i ) {
+				x = i * 2 / 44100 - 1;
+				curve[i] = ( 3 + k ) * x * 20 * deg / ( Math.PI + k * Math.abs(x) );
+			}
+			return curve;
+		};
+		
+		function update() { 
+			requestAnimationFrame(update);
+			
+			/*
+				Nyquist Theorem
+				http://whatis.techtarget.com/definition/Nyquist-Theorem
+				The array of data we get back is 1/2 the size of the sample rate 
+			*/
+			
+			var freqData = new Uint8Array(NUM_SAMPLES/2);
+			var wavData = new Uint8Array(NUM_SAMPLES/2);
+			
+			analyserNode.getByteFrequencyData(freqData);
+			analyserNode.getByteTimeDomainData(wavData);
+			
+			// DRAW!
+			clearCanvas(ctx,bCtx,canvas,buffer);
+			var spacing = canvas.width/freqData.length *.5;
+			var offset = COUNTER * 0.01;
+			var circSpacing = (Math.PI*2)/freqData.length;
+
+			ctx.lineWidth = 3;
+
+			// loop through the data and draw!
+			for(var i=0; i<freqData.length; i++) { 
+
+				var percent=freqData[i]/255;
+				var wavDev=(128 - wavData[i])/50;
+				var circleRadius=percent*maxRadius + maxRadius/3;
+
+				//vertical lines
+				drawLine(spacing*i, 0, spacing*i, canvas.height, makeColor(255*percent,255,255, lineStrength*percent));
+				drawLine(canvas.width - spacing*i, 0, canvas.width - spacing*i, canvas.height, makeColor(255*percent,255,255, lineStrength*percent));
+
+				//bezier curves
+				if(i%10 == 0){
+					ctx.strokeStyle = makeColor(255, 255, 255*percent, percent*lineStrength);
+
+					ctx.beginPath();
+					ctx.moveTo(0,canvas.height/2);
+					ctx.bezierCurveTo(-3,-3,canvas.width/2,100*wavDev+100,canvas.width/2 + (i*spacing), -3);
+					ctx.stroke();
+
+					ctx.beginPath();
+					ctx.moveTo(canvas.width/2-(i*spacing), canvas.height);
+					ctx.bezierCurveTo(canvas.width/2,canvas.height - (100*wavDev+100),canvas.width,canvas.height,canvas.width+3, canvas.height/2);
+					ctx.stroke();
+				}
+				
+				//center & mouse arcs
+				ctx.fillStyle = makeColor(255,255,255*percent,1*percent);
+				ctx.beginPath();
+				ctx.arc(canvas.width/2,canvas.height/2,circleRadius,i*circSpacing + offset,i*circSpacing + circSpacing + offset,false);
+				ctx.lineTo(canvas.width/2,canvas.height/2);
+				ctx.fill();
+				ctx.closePath();
+
+				ctx.fillStyle = radialGradient(mouseX, mouseY, circleRadius*.5, "rgba(0,0,0,0)", "rgba(90,255,255,1)");
+				ctx.beginPath();
+				ctx.arc(mouseX,mouseY,circleRadius*.5,i*circSpacing + offset+Math.PI,i*circSpacing + circSpacing + offset+Math.PI,false);
+				ctx.lineTo(mouseX,mouseY);
+				ctx.fill();
+				ctx.closePath();
+					
+			}
+
+			manipulatePixels();
+			 
+		}
+
+		///Adds effects by manipulating pixel bitmap after audio visualization is drawn
+		function manipulatePixels(){
+			//grab all the pixels from the current canvas
+			var imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
+
+			//imageData.data is an 8-bit typed array with values 0-255
+			//this makes for 1024000 values at 60 fps
+			var data = imageData.data;
+			var length = data.length;
+			var width = imageData.width;
+			var raveR = Math.sin(COUNTER*.03);
+			var raveG = Math.cos(COUNTER*.05);
+			var raveB = Math.sin(COUNTER*.07);
+			raveR = (raveR < 0.2) ? 0.2 : raveR;
+			raveG = (raveG < 0.2) ? 0.2 : raveG;
+			raveB = (raveB < 0.2) ? 0.2 : raveB;
+
+			//iterate through each pixel
+			for(var i=0; i<length; i+=4){
+				if(rave){
+					data[i]   = 255 * raveR;
+					data[i+1] = 255 * raveG;
+					data[i+2] = 255 * raveB;
+				}
+				if(tint){
+					//increase the red channel
+					data[i] = data[i]+100;
+				}
+				if(invert){
+					data[i]   = 255-data[i];
+					data[i+1] = 255-data[i+1];
+					data[i+2] = 255-data[i+2];
+				}
+				if(noise && Math.random()<.10){
+					data[i] = data[i+1] = data[i+2] = 128;
+				}
+				if(ramp){
+					var rgb = (data[i]+data[i+1]+data[i+2])/3;
+					if(rgb > rampCutoff){ 
+						data[i]  += rampValue;
+						data[i+1]+= rampValue;
+						data[i+2]+= rampValue;
+					}
+					else{
+						data[i]  -=rampValue;
+						data[i+1]-=rampValue;
+						data[i+2]-=rampValue;
+					}
+				}
+			}
+
+			//send the manipulated pixels back to the canvas
+			ctx.putImageData(imageData,0,0);
+		}
+
+		//Draws a line in 1 line of code.  Checkmate, atheists.
+		function drawLine(x,y,x2,y2, color){
+			ctx.save();
+			ctx.strokeStyle = color;
+
+			ctx.beginPath();
+			ctx.moveTo(x,y);
+			ctx.lineTo(x2,y2);
+			ctx.stroke();
+			ctx.closePath();
+
+			ctx.restore();
+		}
+		
+		/* HELPER FUNCTIONS */
+
+		//returns an rgba string
+		function makeColor(red, green, blue, alpha){
+   			var color='rgba('+red+','+green+','+blue+', '+alpha+')';
+   			return color;
+		}
+
+		//returns a radial gradient
+		function radialGradient(x, y, r, colorStart, colorStop){
+			var radius = parseInt(r);
+			var grd=ctx.createRadialGradient(x, y, radius/2, x, y, radius);
+			grd.addColorStop(0,colorStart);
+			grd.addColorStop(1,colorStop);
+			return grd;
+		}
+
+		//resizes/moves the canvas and elements on window resize
+		function resize(){
+			var h = window.innerHeight
+			//center canvas
+			document.querySelector("#canvas").width = window.innerWidth;
+			document.querySelector("#canvas").height = h;
+			document.querySelector("#buffer").width = window.innerWidth;
+			document.querySelector("#buffer").height = h;
+
+			var controls = document.querySelector('#controls');
+			controls.style.top = (h*.66)+"px";
+			controls.style.left = (window.innerWidth/2) - 230+"px";
+
+			document.querySelector("#controlsSidebar").style.height = window.innerHeight+"px";
+			document.querySelector("#sidebarTab").style.top = (window.innerHeight/2)-75+"px";
+		};
+
+		//"After image" effect
+		function clearCanvas(ctx,bCtx,canvas,buffer){
+			bCtx.globalAlpha = featherValue;
+			bCtx.clearRect(0,0,buffer.width,buffer.height);
+			bCtx.drawImage(canvas,0,0);
+			ctx.clearRect(0,0,canvas.width,canvas.height);
+
+			bCtx.save();
+			ctx.drawImage(buffer,0,0);
+			bCtx.restore();
+		}
+		
+		//hooks custom audio UI play/pause into the audio element
+		function playAudio(){
+			var music = document.getElementById("music");
+			if(music.paused){
+				music.play();
+				pButton.className = '';
+				pButton.className = 'pause noselect';
+			} else{
+				music.pause();
+				pButton.className = '';
+				pButton.className = 'play noselect';
+			}
+		}
+
+		//updates custom audio timeline's playhead
+		function timeUpdate() {
+			var playPercent = timelineWidth * (music.currentTime / duration);
+			playhead.style.marginLeft = playPercent + "px";
+			if (music.currentTime == duration) {
+				pButton.className = "";
+				pButton.className = "play noselect";
+			}
+		}
+		 
+		//Return percent along the timeline the user clicked
+		function clickPercent(e) {
+			return (e.pageX - timeline.getBoundingClientRect().left) / timelineWidth;
+		}
+		 
+		//Moves the playhead to the user-designated spot
+		function moveplayhead(e) {
+			var timelineRect = timeline.getBoundingClientRect();
+			var newMargLeft = e.pageX - timelineRect.left;
+			if (newMargLeft >= 0 && newMargLeft <= timelineWidth) {
+				playhead.style.marginLeft = newMargLeft + "px";
+			}
+			if (newMargLeft < 0) {
+				playhead.style.marginLeft = "0px";
+			}
+			if (newMargLeft > timelineWidth) {
+				playhead.style.marginLeft = timelineWidth + "px";
+			}
+		};
+
+		//Did the user click on the playhead?
+		function mouseDown() {
+			onplayhead = true;
+			window.addEventListener('mousemove', moveplayhead, true);
+			music.removeEventListener('timeupdate', timeUpdate, false);
+		};
+
+		//Did the user stop clicking?
+		function mouseUp(e) {
+			if (onplayhead) {
+				moveplayhead(e);
+				window.removeEventListener('mousemove', moveplayhead, true);
+				// change current time
+				music.currentTime = (duration * clickPercent(e));
+				music.addEventListener('timeupdate', timeUpdate, false);
+			}
+			onplayhead = false;
+		};
+
+		//Keeps the mouse position updated on mouse move
+		function updateMousePos(e){
+			mouseX = e.clientX;
+			mouseY = e.clientY;
+		}
+		
+		//initializes on window load
+		window.addEventListener("load",init);
+		window.addEventListener("resize", resize);
+	}());
+		
+	</script>
+</head>
+<body>
+	<canvas id="canvas" width="640" height="400"></canvas>
+	<canvas id="buffer" width="640" height="400"></canvas>
+
+	<div id='controlsSidebar'>
+		<div id='sidebarTab'></div>
+
+		<h3>Audio</h3>
+		<label>Distort</label><input type='checkbox' id='distortBox'><br>
+		<p>Warning: Distorted output will be louder than expected.</p>
+		<label>Volume:</label><br><input type='range' id='gain' min='0' max='100' value='50'>
+
+		<h3>Filters</h3>
+		<input type='checkbox' id='tintBox'><label>Tint |</label>
+		<input type='checkbox' id='invertBox'><label>Invert |</label>
+		<input type='checkbox' id='noiseBox'><label>Noise |</label><br>
+		<input type='checkbox' id='rampBox'><label>Ramp |</label>
+		<input type='checkbox' id='raveBox'><label>Psychedelic</label>
+
+		<h3>Tweaks</h3>
+		<label>Max Circle Size:</label><input type='range' id='circleSize' min='50' max='500'>
+		<label>Line Strength:</label><input type='range' id='lineStrength' min='0' max='100'>
+		<label>Ramp Amount:</label><input type='range' id='rampValue' min='0' max='100'>
+		<label>Ramp Cutoff:</label><input type='range' id='rampCutoff' min='0' max='255'><br>
+		<label>Afterimage:</label><br><input type='range' id='featherValue' min='0' max='100' value='0'>
+
+	</div>
+
+	<div id="controls">
+		<button id='pButton' class='pause'></button>
+
+		<div id='timeline'>
+			<div id='playhead'></div>
+			<div id='status' class='noselect'></div>
+		</div>
+			<audio id='music' controls='controls'>
+				<source src="media/Starbound.mp3" type='audio/mp3'>
+				<source src='media/Shadows and Dust.mp3' type='audio/mp3'>
+			</audio>
+
+		<div id="trackSelectStyle">
+			<select id="trackSelect">
+				<option value="media/Starbound.mp3">Starbound</option>
+				<option value="media/Shadows and Dust.mp3">Shadows and Dust</option>
+			</select>
+		</div>
+
+	</div>
+</body>
+</html>
